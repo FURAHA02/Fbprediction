@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Match Predictions Pro</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom, #000000, #333333, #cc0000);
+      color: white;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    header {
+      background-color: #111;
+      padding: 15px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .logo {
+      color: #ff0000;
+      text-shadow: 0 0 5px rgba(255,0,0,0.7);
+    }
+    
+    .logo span {
+      color: white;
+    }
+    
+    nav {
+      display: flex;
+      overflow-x: auto;
+      background-color: #222;
+      padding: 10px 5px;
+      position: sticky;
+      top: 64px;
+      z-index: 99;
+    }
+    
+    nav button {
+      background-color: #cc0000;
+      color: white;
+      border: none;
+      padding: 12px 15px;
+      margin: 0 5px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      white-space: nowrap;
+      font-size: 16px;
+      flex-shrink: 0;
+      transition: background-color 0.3s ease;
+    }
+    
+    nav button.active {
+      background-color: #00aa66;
+      position: relative;
+      z-index: 1;
+      box-shadow: 0 0 10px rgba(0, 170, 102, 0.7);
+    }
+    
+    .add-icon {
+      background-color: #00aa66;
+      font-size: 20px;
+      padding: 8px 15px;
+      border-radius: 50%;
+      margin-left: auto;
+    }
+    
+    .section-title {
+      text-align: center;
+      margin: 15px 10px;
+      font-size: 20px;
+      background-color: #333;
+      padding: 12px;
+      border-radius: 10px;
+    }
+    
+    .match-card {
+      background-color: rgba(255, 255, 255, 0.1);
+      margin: 15px 10px;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      position: relative;
+      animation: fadeIn 0.5s ease-out forwards;
+      opacity: 0;
+    }
+    
+    @keyframes fadeIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .match-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    
+    .match-extra {
+      display: flex;
+      justify-content: space-between;
+      color: #ccc;
+      font-size: 16px;
+    }
+    
+    .result-badge {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      background-color: #00aa66;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 50%;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    
+    .lost {
+      background-color: #cc0000;
+    }
+    
+    /* Admin Panel Styles */
+    .admin-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0,0,0,0.7);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .admin-panel {
+      background-color: #222;
+      border-radius: 10px;
+      width: 95%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 20px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+      animation: slideDown 0.3s ease-out;
+    }
+
+    .admin-panel.closing {
+      animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+      from { transform: translateY(-50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(0); opacity: 1; }
+      to { transform: translateY(-50px); opacity: 0; }
+    }
+
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #444;
+    }
+
+    .admin-close {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 28px;
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 50%;
+      transition: all 0.3s ease;
+    }
+
+    .admin-close:hover {
+      background-color: rgba(255,255,255,0.1);
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #ccc;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px;
+      border-radius: 5px;
+      border: none;
+      background-color: #333;
+      color: white;
+      font-size: 16px;
+    }
+
+    .btn-primary {
+      background-color: #00aa66;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    .btn-danger {
+      background-color: #cc0000;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    /* VIP Section Styles */
+    .vip-section {
+      background-color: #222;
+      margin: 15px 10px;
+      padding: 20px;
+      border-radius: 10px;
+      position: relative;
+      display: none;
+    }
+    
+    .vip-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #cc0000;
+      color: white;
+      border: none;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .payment-instructions {
+      background-color: #333;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      font-size: 16px;
+    }
+    
+    .mpesa-number {
+      font-size: 20px;
+      font-weight: bold;
+      color: #00ffaa;
+      margin: 10px 0;
+    }
+    
+    .payment-confirm {
+      margin-top: 20px;
+    }
+    
+    .payment-confirm input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: none;
+      background-color: #333;
+      color: white;
+      font-size: 16px;
+      text-align: center;
+    }
+    
+    .payment-confirm button {
+      background-color: #00aa66;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-weight: bold;
+      margin-top: 10px;
+      cursor: pointer;
+      width: 100%;
+    }
+    
+    .payment-message {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    
+    .status-badge {
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: bold;
+      display: inline-block;
+      margin-top: 5px;
+    }
+    
+    .pending {
+      background-color: #ff9900;
+      color: black;
+    }
+    
+    .approved {
+      background-color: #00aa66;
+      color: white;
+    }
+    
+    .rejected {
+      background-color: #cc0000;
+      color: white;
+    }
+    
+    .time-left {
+      font-size: 14px;
+      color: #00ffaa;
+      margin-top: 5px;
+    }
+    
+    .expired {
+      color: #ff4444;
+    }
+
+    #odds-total {
+      text-align: center;
+      font-weight: bold;
+      margin: 15px 10px;
+      padding: 12px;
+      background-color: rgba(0,0,0,0.5);
+      border-radius: 10px;
+      font-size: 18px;
+      display: none;
+    }
+
+    #vip-status {
+      text-align: center;
+      margin: 10px;
+      padding: 10px;
+      background-color: #222;
+      border-radius: 5px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 15px;
+      background-color: #111;
+      color: #aaa;
+      margin-top: 20px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">MATCH<span> PREDICTIONS</span></div>
+</header>
+
+<nav>
+  <button class="active" id="free-btn">Free Picks</button>
+  <button id="odds-btn">2 Odds Free</button>
+  <button id="yesterday-btn">yesterday</button>
+  <button id="vip-btn">vip picks</button>
+  <button class="add-icon" id="admin-btn">+</button>
+</nav>
+
+<div class="section-title" id="section-title">Free Picks - Today</div>
+<div id="vip-status"></div>
+<div id="match-list"></div>
+<div id="odds-total"></div>
+
+<!-- VIP Payment Section -->
+<div class="vip-section" id="vip-section">
+  <button class="vip-close" id="vip-close">&times;</button>
+  <h3>VIP MEMBERSHIP ACCESS</h3>
+  
+  <div class="payment-instructions">
+    <p>kupata mechi za vip,lipa tsh10,000 kupitia M-Pesa:</p>
+    <div class="mpesa-number">0763499302</div>
+    <p>1. nenda m-pesa</p>
+    <p>2. chagua "tuma pesa"</p>
+    <p>3. jaza namba ya simu</p>
+    <p>4. ingiza kiasi: 10,000</p>
+    <p>5. jaza namba ya siri</p>
+    <p>6. bonyeza "tuma"</p>
+  </div>
+
+  <div class="payment-confirm">
+    <p>baada ya kutuma, ingiza namba au jina la namba ulilofanyia malipo:</p>
+    <input type="text" id="payment-code" placeholder="MF61X8A2B3" maxlength="50">
+    <button id="confirm-payment">Submit for Verification</button>
+    <div id="payment-message" class="payment-message"></div>
+  </div>
+</div>
+
+<!-- Admin Panel -->
+<div class="admin-overlay" id="admin-overlay">
+  <div class="admin-panel">
+    <div class="admin-header">
+      <h2>Admin Panel</h2>
+      <button class="admin-close" id="admin-close">&times;</button>
+    </div>
+
+    <div class="form-group">
+      <label for="category">Match Category</label>
+      <select id="category" class="form-control">
+        <option value="free">Free Picks</option>
+        <option value="odds">2 Odds Free</option>
+        <option value="vip">VIP Picks</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="day">Day</label>
+      <select id="day" class="form-control">
+        <option value="leo">Today</option>
+        <option value="jana">Yesterday</option>
+        <option value="kesho">Tomorrow</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="team">Match</label>
+      <input type="text" id="team" class="form-control" placeholder="Man Utd vs Chelsea" required>
+    </div>
+
+    <div class="form-group">
+      <label for="time">Time</label>
+      <input type="text" id="time" class="form-control" placeholder="20:00" required>
+    </div>
+
+    <div class="form-group">
+      <label for="odds">Odds</label>
+      <input type="text" id="odds" class="form-control" placeholder="1.85" required>
+    </div>
+
+    <div class="form-group">
+      <label for="prediction">Prediction</label>
+      <input type="text" id="prediction" class="form-control" placeholder="Over 2.5" required>
+    </div>
+
+    <div class="form-group">
+      <label for="result">Result</label>
+      <select id="result" class="form-control">
+        <option value="">Select result</option>
+        <option value="won">Won</option>
+        <option value="lost">Lost</option>
+      </select>
+    </div>
+
+    <button id="save-btn" class="btn-primary">Save Match</button>
+
+    <h3 style="margin-top:30px; border-top:1px solid #444; padding-top:15px;">VIP Requests</h3>
+    <div id="vip-requests">
+      <!-- VIP requests will appear here -->
+    </div>
+
+    <h3 style="margin-top:30px; border-top:1px solid #444; padding-top:15px;">VIP Customers</h3>
+    <div id="customer-list">
+      <!-- VIP customers will appear here -->
+    </div>
+
+    <!-- DELETE MATCH SECTION -->
+    <h3 style="margin-top:30px; border-top:1px solid #444; padding-top:15px;">Delete Match</h3>
+    <div class="form-group">
+      <label for="delete-category">Category</label>
+      <select id="delete-category" class="form-control">
+        <option value="free">Free Picks</option>
+        <option value="odds">2 Odds Free</option>
+        <option value="vip">VIP Picks</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="delete-day">Day</label>
+      <select id="delete-day" class="form-control">
+        <option value="leo">Today</option>
+        <option value="jana">Yesterday</option>
+        <option value="kesho">Tomorrow</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="delete-index">Match Number (0 is first)</label>
+      <input type="number" id="delete-index" class="form-control" placeholder="0" min="0">
+    </div>
+
+    <button id="preview-delete" class="btn-primary" style="margin-bottom:10px;">Preview Matches</button>
+    <button id="delete-btn" class="btn-danger">Delete Match</button>
+
+    <button id="clear-btn" class="btn-danger" style="margin-top:30px;">Clear All Data</button>
+  </div>
+</div>
+
+<footer>
+  &copy; 2025 MatchPredictions.com | 
+  <span id="contact-btn" style="text-decoration:underline;">Contact Us</span>
+</footer>
+
+<script>
+// Data storage
+let matches = {
+  free: { leo: [], jana: [], kesho: [] },
+  odds: { leo: [], jana: [], kesho: [] },
+  vip: { leo: [], jana: [], kesho: [] }
+};
+
+let vipCustomers = [];
+let vipRequests = [];
+
+// Current view
+let currentCategory = 'free';
+let currentDay = 'leo';
+
+// Load saved data
+function loadData() {
+  try {
+    const savedMatches = localStorage.getItem('matches-data');
+    if (savedMatches) {
+      matches = JSON.parse(savedMatches);
+    }
+    
+    const savedCustomers = localStorage.getItem('vip-customers');
+    if (savedCustomers) {
+      vipCustomers = JSON.parse(savedCustomers);
+      checkExpiredCustomers();
+    }
+
+    const savedRequests = localStorage.getItem('vip-requests');
+    if (savedRequests) {
+      vipRequests = JSON.parse(savedRequests);
+    }
+  } catch (error) {
+    console.error('Error loading data:', error);
+    alert('Error loading data. You may need to reset.');
+  }
+}
+
+// Save data
+function saveData() {
+  try {
+    localStorage.setItem('matches-data', JSON.stringify(matches));
+    localStorage.setItem('vip-customers', JSON.stringify(vipCustomers));
+    localStorage.setItem('vip-requests', JSON.stringify(vipRequests));
+  } catch (error) {
+    console.error('Error saving data:', error);
+    alert('Error saving data. Please try again.');
+  }
+}
+
+// Check and remove expired customers
+function checkExpiredCustomers() {
+  const now = new Date();
+  const activeCustomers = vipCustomers.filter(customer => {
+    return new Date(customer.expiry) > now;
+  });
+  
+  if (activeCustomers.length !== vipCustomers.length) {
+    vipCustomers = activeCustomers;
+    saveData();
+  }
+}
+
+// Calculate days left for VIP access
+function getDaysLeft(expiryDate) {
+  const now = new Date();
+  const expiry = new Date(expiryDate);
+  const diffTime = expiry - now;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  return diffDays > 0 ? diffDays : 0;
+}
+
+// Check if user has active VIP access
+function hasActiveVIP() {
+  const now = new Date();
+  return vipCustomers.some(customer => new Date(customer.expiry) > now);
+}
+
+// Show matches
+function showMatches() {
+  const container = document.getElementById('match-list');
+  container.innerHTML = '';
+  
+  // Check if VIP content should be locked
+  if (currentCategory === 'vip' && !hasActiveVIP()) {
+    showVIPPayment();
+    return;
+  }
+  
+  const dayMatches = matches[currentCategory][currentDay];
+  
+  if (dayMatches.length === 0) {
+    container.innerHTML = '<div class="match-card">No matches for this day</div>';
+    document.getElementById('odds-total').style.display = 'none';
+    return;
+  }
+  
+  dayMatches.forEach((match, index) => {
+    const div = document.createElement('div');
+    div.className = 'match-card';
+    div.style.animationDelay = `${index * 0.1}s`;
+    
+    // Add result badge if exists
+    let resultBadge = '';
+    if (match.result) {
+      resultBadge = `<div class="result-badge ${match.result}">${match.result === 'won' ? '✓' : '✗'}</div>`;
+    }
+    
+    div.innerHTML = `
+      ${resultBadge}
+      <div class="match-info">
+        <span>${match.team}</span>
+        <span>${match.prediction}</span>
+      </div>
+      <div class="match-extra">
+        <span>Time: ${match.time}</span>
+        <span>Odds: ${match.odds}</span>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+  
+  // Show total odds only for 2 odds section
+  if (currentCategory === 'odds') {
+    const total = matches.odds[currentDay].reduce((acc, match) => {
+      return acc * parseFloat(match.odds);
+    }, 1);
+    document.getElementById('odds-total').textContent = `Total Odds: ${total.toFixed(2)}`;
+    document.getElementById('odds-total').style.display = 'block';
+  } else {
+    document.getElementById('odds-total').style.display = 'none';
+  }
+}
+
+// Show VIP payment section
+function showVIPPayment() {
+  document.getElementById('vip-section').style.display = 'block';
+  showVIPStatus();
+}
+
+// Hide VIP payment section
+function hideVIPPayment() {
+  document.getElementById('vip-section').style.display = 'none';
+}
+
+// Show VIP status
+function showVIPStatus() {
+  const vipStatus = document.getElementById('vip-status');
+  const now = new Date();
+  
+  const activeCustomer = vipCustomers.find(customer => {
+    return new Date(customer.expiry) > now;
+  });
+  
+  if (activeCustomer) {
+    const daysLeft = getDaysLeft(activeCustomer.expiry);
+    vipStatus.innerHTML = `
+      <p>VIP Access: <span style="color:#00ffaa;">ACTIVE</span></p>
+      <p class="time-left">Days remaining: ${daysLeft}</p>
+    `;
+  } else {
+    vipStatus.innerHTML = `
+      <p>VIP Access: <span style="color:#ff4444;">INACTIVE</span></p>
+      <p class="time-left">Click "VIP Picks" for payment details</p>
+    `;
+  }
+}
+
+// Add new match
+function addMatch() {
+  const category = document.getElementById('category').value;
+  const day = document.getElementById('day').value;
+  const team = document.getElementById('team').value.trim();
+  const time = document.getElementById('time').value.trim();
+  const odds = document.getElementById('odds').value.trim();
+  const prediction = document.getElementById('prediction').value.trim();
+  const result = document.getElementById('result').value;
+  
+  if (!team || !time || !odds || !prediction) {
+    alert('Please fill all required fields!');
+    return;
+  }
+  
+  matches[category][day].push({ team, time, odds, prediction, result });
+  saveData();
+  
+  // Clear form
+  document.getElementById('team').value = '';
+  document.getElementById('time').value = '';
+  document.getElementById('odds').value = '';
+  document.getElementById('prediction').value = '';
+  document.getElementById('result').value = '';
+  
+  // Refresh view if needed
+  if (category === currentCategory && day === currentDay) {
+    showMatches();
+  }
+  
+  alert('Match added successfully!');
+}
+
+// Confirm VIP payment
+function confirmPayment() {
+  const paymentCode = document.getElementById('payment-code').value.trim();
+  
+  if (!paymentCode) {
+    document.getElementById('payment-message').textContent = 'Please enter your transaction code';
+    document.getElementById('payment-message').style.color = '#ff4444';
+    return;
+  }
+  
+  // Create new VIP request
+  vipRequests.push({
+    id: Date.now(),
+    paymentCode,
+    date: new Date().toISOString(),
+    status: 'pending'
+  });
+  
+  saveData();
+  
+  document.getElementById('payment-message').innerHTML = `
+    <p style="color:#00ffaa;">Request received!</p>
+    <p>Admin will verify your payment shortly.</p>
+    <p>Your transaction code: <strong>${paymentCode}</strong></p>
+  `;
+  
+  // Reset and hide after 3 seconds
+  setTimeout(() => {
+    document.getElementById('payment-code').value = '';
+    hideVIPPayment();
+    showVIPStatus();
+  }, 3000);
+}
+
+// Update VIP requests list in admin panel
+function updateVIPRequestsList() {
+  const container = document.getElementById('vip-requests');
+  container.innerHTML = '';
+
+  const pendingRequests = vipRequests.filter(req => req.status === 'pending');
+
+  if (pendingRequests.length === 0) {
+    container.innerHTML = '<p>No pending VIP requests.</p>';
+    return;
+  }
+
+  pendingRequests.forEach(request => {
+    const div = document.createElement('div');
+    div.className = 'request-item';
+    div.innerHTML = `
+      <div>
+        <strong>${request.paymentCode}</strong>
+        <div class="status-badge pending">Pending</div>
+        <div><small>${new Date(request.date).toLocaleString()}</small></div>
+      </div>
+      <div style="margin-top:10px;">
+        <button class="btn-primary" onclick="approveVIPRequest(${request.id})">Approve</button>
+        <button class="btn-danger" onclick="rejectVIPRequest(${request.id})" style="margin-top:5px;">Reject</button>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+// Approve VIP request
+function approveVIPRequest(requestId) {
+  const requestIndex = vipRequests.findIndex(req => req.id == requestId);
+  if (requestIndex !== -1) {
+    vipRequests[requestIndex].status = 'approved';
+    
+    // Add to VIP customers (30 days access)
+    const now = new Date();
+    const expiryDate = new Date();
+    expiryDate.setDate(now.getDate() + 14);
+    
+    vipCustomers.push({
+      id: Date.now(),
+      paymentCode: vipRequests[requestIndex].paymentCode,
+      dateAdded: now.toISOString(),
+      expiry: expiryDate.toISOString()
+    });
+    
+    saveData();
+    updateVIPRequestsList();
+    updateCustomerList();
+    showVIPStatus();
+    alert('Request approved!');
+  }
+}
+
+// Reject VIP request
+function rejectVIPRequest(requestId) {
+  const requestIndex = vipRequests.findIndex(req => req.id == requestId);
+  if (requestIndex !== -1) {
+    vipRequests[requestIndex].status = 'rejected';
+    saveData();
+    updateVIPRequestsList();
+    alert('Request rejected!');
+  }
+}
+
+// Update customer list in admin panel
+function updateCustomerList() {
+  const container = document.getElementById('customer-list');
+  container.innerHTML = '';
+
+  if (vipCustomers.length === 0) {
+    container.innerHTML = '<p>No VIP customers.</p>';
+    return;
+  }
+
+  vipCustomers.forEach(customer => {
+    const daysLeft = getDaysLeft(customer.expiry);
+    const isExpired = daysLeft <= 0;
+    
+    const div = document.createElement('div');
+    div.className = 'customer-item';
+    div.innerHTML = `
+      <div>
+        <strong>${customer.paymentCode}</strong>
+        <div class="${isExpired ? 'expired' : ''}">Days left: ${daysLeft}</div>
+        <div><small>${new Date(customer.dateAdded).toLocaleString()}</small></div>
+      </div>
+      <button class="btn-danger" onclick="removeCustomer(${customer.id})" style="margin-top:10px;">Remove</button>
+    `;
+    container.appendChild(div);
+  });
+}
+
+// Remove customer
+function removeCustomer(customerId) {
+  if (confirm('Are you sure you want to remove this customer?')) {
+    vipCustomers = vipCustomers.filter(c => c.id !== customerId);
+    saveData();
+    updateCustomerList();
+    showVIPStatus();
+  }
+}
+
+// Delete match
+function deleteMatch() {
+  const category = document.getElementById('delete-category').value;
+  const day = document.getElementById('delete-day').value;
+  const index = parseInt(document.getElementById('delete-index').value);
+
+  const matchToDelete = matches[category][day][index];
+  if (!matchToDelete) {
+    alert("No match at this position!");
+    return;
+  }
+
+  if (!confirm(`Are you sure you want to delete:\n${matchToDelete.team} (${matchToDelete.prediction})?`)) {
+    return;
+  }
+
+  matches[category][day].splice(index, 1);
+  saveData();
+  
+  if (currentCategory === category && currentDay === day) {
+    showMatches();
+  }
+  
+  alert("Match deleted successfully!");
+}
+
+// Show matches for deletion
+function showMatchesForDeletion() {
+  const category = document.getElementById('delete-category').value;
+  const day = document.getElementById('delete-day').value;
+  
+  let matchList = "Current matches:\n";
+  matches[category][day].forEach((match, i) => {
+    matchList += `${i}. ${match.team} - ${match.prediction}\n`;
+  });
+  
+  alert(matchList);
+}
+
+// Clear all data
+function clearAll() {
+  if (confirm('Are you sure you want to delete ALL data?')) {
+    localStorage.removeItem('matches-data');
+    localStorage.removeItem('vip-customers');
+    localStorage.removeItem('vip-requests');
+    matches = {
+      free: { leo: [], jana: [], kesho: [] },
+      odds: { leo: [], jana: [], kesho: [] },
+      vip: { leo: [], jana: [], kesho: [] }
+    };
+    vipCustomers = [];
+    vipRequests = [];
+    showMatches();
+    updateCustomerList();
+    updateVIPRequestsList();
+    showVIPStatus();
+    alert('All data has been cleared!');
+  }
+}
+
+// Switch to yesterday's matches
+function showYesterday() {
+  currentDay = 'jana';
+  document.getElementById('section-title').textContent = 
+    `${currentCategory === 'free' ? 'Free Picks' : 
+      currentCategory === 'odds' ? '2 Odds Free' : 'VIP Picks'} - Yesterday`;
+  setActiveButton('yesterday-btn');
+  showMatches();
+}
+
+// Show admin panel
+function showAdminPanel() {
+  document.getElementById('admin-overlay').style.display = 'flex';
+  updateVIPRequestsList();
+  updateCustomerList();
+}
+
+// Hide admin panel
+function hideAdminPanel() {
+  const panel = document.getElementById('admin-overlay');
+  panel.querySelector('.admin-panel').classList.add('closing');
+  
+  setTimeout(() => {
+    panel.style.display = 'none';
+    panel.querySelector('.admin-panel').classList.remove('closing');
+  }, 300);
+}
+
+// Set active navigation button
+function setActiveButton(btnId) {
+  document.querySelectorAll('nav button').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  if (btnId) {
+    document.getElementById(btnId).classList.add('active');
+  }
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+  loadData();
+  showVIPStatus();
+  showMatches();
+});
+
+document.getElementById('free-btn').addEventListener('click', function() {
+  currentCategory = 'free';
+  currentDay = 'leo';
+  document.getElementById('section-title').textContent = 'Free Picks - Today';
+  setActiveButton('free-btn');
+  hideVIPPayment();
+  showMatches();
+});
+
+document.getElementById('odds-btn').addEventListener('click', function() {
+  currentCategory = 'odds';
+  currentDay = 'leo';
+  document.getElementById('section-title').textContent = '2 Odds Free - Today';
+  setActiveButton('odds-btn');
+  hideVIPPayment();
+  showMatches();
+});
+
+document.getElementById('vip-btn').addEventListener('click', function() {
+  currentCategory = 'vip';
+  currentDay = 'leo';
+  document.getElementById('section-title').textContent = 'VIP Picks - Today';
+  setActiveButton('vip-btn');
+  
+  if (!hasActiveVIP()) {
+    showVIPPayment();
+  } else {
+    hideVIPPayment();
+    showMatches();
+  }
+});
+
+document.getElementById('yesterday-btn').addEventListener('click', showYesterday);
+
+document.getElementById('admin-btn').addEventListener('click', function() {
+  const pass = prompt('Enter admin password:');
+  if (pass === '98761234') {
+    showAdminPanel();
+  } else {
+    alert('Incorrect password!');
+  }
+});
+
+document.getElementById('admin-close').addEventListener('click', hideAdminPanel);
+document.getElementById('vip-close').addEventListener('click', hideVIPPayment);
+document.getElementById('save-btn').addEventListener('click', addMatch);
+document.getElementById('confirm-payment').addEventListener('click', confirmPayment);
+document.getElementById('clear-btn').addEventListener('click', clearAll);
+document.getElementById('contact-btn').addEventListener('click', function() {
+  alert('Contact:\nWhatsApp: +255 763499302\nEmail: info@matchpredictions.com');
+});
+
+// Delete functionality
+document.getElementById('delete-btn').addEventListener('click', deleteMatch);
+document.getElementById('preview-delete').addEventListener('click', showMatchesForDeletion);
+</script>
+</body>
+</html>
